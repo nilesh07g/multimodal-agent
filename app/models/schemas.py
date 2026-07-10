@@ -1,4 +1,4 @@
-from typing import Literal, Optional
+from typing import Any, Literal, Optional
 
 from pydantic import BaseModel, Field, field_validator
 
@@ -48,3 +48,39 @@ class YoutubeResult(BaseModel):
 
 class ConversationalResult(BaseModel):
     reply: str
+
+
+# ---------- agent schemas ----------
+
+class Clarification(BaseModel):
+    needed: bool
+    question: Optional[str] = None
+
+
+class ToolStep(BaseModel):
+    tool: str
+    args: dict[str, Any] = Field(default_factory=dict)
+    reason: str = ""
+
+
+class Plan(BaseModel):
+    steps: list[ToolStep]
+    overall_reason: str = ""
+
+    @field_validator("steps")
+    @classmethod
+    def _at_least_one(cls, v: list[ToolStep]) -> list[ToolStep]:
+        if not v:
+            raise ValueError("plan must have at least one step")
+        return v
+
+
+class PlanTraceStep(BaseModel):
+    step_number: int
+    tool: str
+    args: dict[str, Any]
+    reason: str = ""
+    output_preview: str = ""
+    duration_ms: int = 0
+    status: Literal["ok", "error"] = "ok"
+    error: Optional[str] = None
