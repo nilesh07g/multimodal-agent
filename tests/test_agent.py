@@ -4,11 +4,20 @@ that mimic each of the assignment's sample cases.
 Requires GEMINI_API_KEY in .env. Skipped otherwise.
 """
 import os
+import time
 
 import pytest
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+@pytest.fixture(autouse=True)
+def _cool_down():
+    # each agent test triggers several gemini calls. free tier is 15 rpm — give
+    # the bucket time to refill between tests.
+    yield
+    time.sleep(5)
 
 pytestmark = pytest.mark.skipif(
     not os.getenv("GEMINI_API_KEY"),
