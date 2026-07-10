@@ -1,10 +1,14 @@
+import json
 import time
-from typing import Optional
+from typing import Optional, Type, TypeVar
 
 from google import genai
 from google.genai import types
+from pydantic import BaseModel, ValidationError
 
 from app.config import settings
+
+T = TypeVar("T", bound=BaseModel)
 
 _client: Optional[genai.Client] = None
 
@@ -61,3 +65,19 @@ def generate_json(prompt: str, *, system: str = "", temperature: float = 0.1, ma
             if attempt < max_retries:
                 time.sleep(0.6 * (attempt + 1))
     raise last_err
+
+
+def generate_validated(prompt: str, model_cls: Type[T], *, system: str = "", temperature: float = 0.1) -> T:
+    """Call Gemini for JSON, validate against `model_cls`. On JSON/validation error, retry once
+    with the error appended so the model can self-correct."""
+    raw = generate_json(prompt, system=system, temperature=temperature)
+    try:
+        return model_cls(**json.loads(raw))
+    except (json.JSONDecodeError, ValidationError) as first_err:
+        retry_prompt = (
+            f"{prompt}\n\n---\n"
+            f"Your previous output failed schema validation with error: {first_err}\n"
+            f"Return valid JSON matching the required schema. No prose, no code fences."
+        )
+        raw = generate_json(retry_prompt, system=system, temperature=temperature)
+        return model_cls(**json.loads(raw))
