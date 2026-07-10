@@ -13,6 +13,9 @@ env/
 uploads/
 *.log
 
+# local reference only
+docs/plan.md
+
 .idea/
 .vscode/
 .DS_Store
