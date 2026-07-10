@@ -66,6 +66,22 @@ composer.addEventListener("submit", async (e) => {
   pending = [];
   renderChips();
 
-  // placeholder until phase 5 wires this up
-  bubble("agent", `<p><span class="spinner"></span> backend not wired yet (phase 1 shell). received: q="${escapeHtml(q)}", files=${attached.length}</p>`);
+  const loading = bubble("agent", `<p><span class="spinner"></span> extracting...</p>`);
+  sendBtn.disabled = true;
+
+  const fd = new FormData();
+  fd.append("query", q);
+  for (const f of attached) fd.append("files", f);
+
+  try {
+    const resp = await fetch("/api/chat", { method: "POST", body: fd });
+    const json = await resp.json();
+    // phase 2: dump raw extractor json. phase 5 replaces this with real panels.
+    loading.innerHTML = `<p style="color:#8b93a7;font-size:12px">phase 2 raw extractor output</p>
+      <pre style="margin:0;font-size:12px;overflow:auto;max-height:60vh;white-space:pre-wrap">${escapeHtml(JSON.stringify(json, null, 2))}</pre>`;
+  } catch (err) {
+    loading.innerHTML = `<p style="color:#ff6b6b">error: ${escapeHtml(err.message || String(err))}</p>`;
+  } finally {
+    sendBtn.disabled = false;
+  }
 });
