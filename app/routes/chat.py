@@ -2,6 +2,7 @@ from typing import Optional
 
 from fastapi import APIRouter, File, Form, UploadFile
 
+from app.agent import orchestrator
 from app.config import settings
 from app.extractors import audio_stt, image_ocr, pdf_parser, text as text_ext, url_detector
 
@@ -85,12 +86,22 @@ async def chat(
         file_results.append(entry)
 
     haystack = "\n".join(t for t in combined_text_for_urls if t)
-    return {
-        "query": q,
-        "extracted": {
-            "text_from_query": q,
-            "files": file_results,
-            "urls": url_detector.find_urls(haystack),
-            "youtube_urls": url_detector.find_youtube_urls(haystack),
-        },
+    extracted = {
+        "text_from_query": q,
+        "files": file_results,
+        "urls": url_detector.find_urls(haystack),
+        "youtube_urls": url_detector.find_youtube_urls(haystack),
     }
+
+    if not q and not file_results:
+        return {
+            "query": q,
+            "extracted": extracted,
+            "answer": "type a question or attach a file (image, pdf, audio) to get started.",
+            "follow_up": None,
+            "plan": None,
+            "plan_trace": [],
+        }
+
+    agent_out = orchestrator.run(q, extracted)
+    return {"query": q, "extracted": extracted, **agent_out}
