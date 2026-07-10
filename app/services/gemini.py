@@ -1,4 +1,5 @@
 import json
+import re
 import time
 from typing import Optional, Type, TypeVar
 
@@ -9,6 +10,24 @@ from pydantic import BaseModel, ValidationError
 from app.config import settings
 
 T = TypeVar("T", bound=BaseModel)
+
+
+def _parse_retry_delay(err: Exception) -> float:
+    """Pull Google's suggested retry delay out of a 429 error, if present.
+    Falls back to 0 if not found."""
+    msg = str(err)
+    m = re.search(r"retry in (\d+(?:\.\d+)?)s", msg, re.I)
+    if m:
+        return float(m.group(1))
+    m = re.search(r"'retryDelay':\s*'(\d+(?:\.\d+)?)s'", msg)
+    if m:
+        return float(m.group(1))
+    return 0.0
+
+
+def _is_rate_limit(err: Exception) -> bool:
+    s = str(err)
+    return "429" in s or "RESOURCE_EXHAUSTED" in s or "quota" in s.lower()
 
 _client: Optional[genai.Client] = None
 
@@ -40,7 +59,13 @@ def generate_text(prompt: str, *, system: str = "", temperature: float = 0.2, ma
         except Exception as e:
             last_err = e
             if attempt < max_retries:
-                time.sleep(0.6 * (attempt + 1))
+                if _is_rate_limit(e):
+                    # respect google's own retry hint if present, else back off longer
+                    wait = _parse_retry_delay(e) or [8.0, 20.0, 40.0][min(attempt, 2)]
+                    wait += 1.0  # small buffer
+                else:
+                    wait = [2.0, 5.0, 10.0][min(attempt, 2)]
+                time.sleep(wait)
     raise last_err
 
 
@@ -63,7 +88,13 @@ def generate_json(prompt: str, *, system: str = "", temperature: float = 0.1, ma
         except Exception as e:
             last_err = e
             if attempt < max_retries:
-                time.sleep(0.6 * (attempt + 1))
+                if _is_rate_limit(e):
+                    # respect google's own retry hint if present, else back off longer
+                    wait = _parse_retry_delay(e) or [8.0, 20.0, 40.0][min(attempt, 2)]
+                    wait += 1.0  # small buffer
+                else:
+                    wait = [2.0, 5.0, 10.0][min(attempt, 2)]
+                time.sleep(wait)
     raise last_err
 
 
