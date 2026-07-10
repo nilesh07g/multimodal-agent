@@ -18,5 +18,9 @@ class Settings(BaseSettings):
     # pdf: if a page yields less than this many chars via PyMuPDF, fall back to OCR
     pdf_ocr_char_threshold: int = 40
 
+    # optional overrides for system binaries (windows installs often not on PATH)
+    tesseract_cmd: str = ""
+    poppler_path: str = ""
+
 
 settings = Settings()
