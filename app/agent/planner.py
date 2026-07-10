@@ -1,6 +1,13 @@
+import json
+import logging
+
+from pydantic import ValidationError
+
 from app.models.schemas import Plan, ToolStep
 from app.services.gemini import generate_validated
 from app.tools import registry
+
+log = logging.getLogger(__name__)
 
 _SYSTEM = (
     "You plan the shortest useful sequence of tool calls to satisfy the user's "
@@ -56,11 +63,17 @@ def plan(query: str, extraction_summary: str, artifact_names: list[str]) -> Plan
             system=_SYSTEM,
             temperature=0.1,
         )
-    except Exception:
+    except (json.JSONDecodeError, ValidationError) as e:
+        log.warning("planner validation failed after retry, falling back: %s", e)
         return _fallback_plan()
+    except Exception as e:
+        # API/network error — surface it rather than silently degrading
+        log.error("planner API error: %s", e)
+        raise
 
     valid_tools = set(registry.names())
     p.steps = [s for s in p.steps if s.tool in valid_tools]
     if not p.steps:
+        log.warning("planner produced no valid tools; falling back")
         return _fallback_plan()
     return p
