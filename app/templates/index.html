@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parallel Minds Agent</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="title">parallel-minds agent</div>
+    <div class="sub">multimodal input &rarr; tool chain &rarr; text answer</div>
+  </header>
+
+  <main class="chat" id="chat">
+    <div class="msg agent">
+      <div class="bubble">
+        <p>hi. drop a file (image, pdf, audio) and/or type a question. i'll extract, plan, and answer.</p>
+      </div>
+    </div>
+  </main>
+
+  <form class="composer" id="composer" enctype="multipart/form-data" autocomplete="off">
+    <div class="files" id="fileList"></div>
+    <div class="row">
+      <label class="attach" title="attach files">
+        <input type="file" id="fileInput" multiple
+               accept="image/png,image/jpeg,application/pdf,audio/mpeg,audio/wav,audio/mp4,audio/x-m4a" />
+        <span>+</span>
+      </label>
+      <input type="text" id="queryInput" placeholder="ask something, or leave blank if the files speak for themselves" />
+      <button type="submit" id="sendBtn">send</button>
+    </div>
+  </form>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
