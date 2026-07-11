@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Parallel Minds Agent</title>
   <link rel="stylesheet" href="/static/style.css" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
   <header class="topbar">
@@ -32,6 +33,10 @@
       <button type="submit" id="sendBtn">send</button>
     </div>
   </form>
+
+  <div class="drop-overlay" id="dropOverlay">
+    <div class="drop-inner">drop files to attach</div>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>
