@@ -58,14 +58,14 @@ def generate_text(prompt: str, *, system: str = "", temperature: float = 0.2, ma
             return (resp.text or "").strip()
         except Exception as e:
             last_err = e
-            if attempt < max_retries:
-                if _is_rate_limit(e):
-                    # respect google's own retry hint if present, else back off longer
-                    wait = _parse_retry_delay(e) or [8.0, 20.0, 40.0][min(attempt, 2)]
-                    wait += 1.0  # small buffer
-                else:
-                    wait = [2.0, 5.0, 10.0][min(attempt, 2)]
-                time.sleep(wait)
+            if attempt >= max_retries:
+                break
+            # rate limits: fail fast so the route can return a friendly retry msg
+            # (waiting google's suggested 30-60s delay blows past render's proxy timeout)
+            if _is_rate_limit(e):
+                break
+            # transient network errors: short backoff and retry
+            time.sleep([2.0, 5.0][min(attempt, 1)])
     raise last_err
 
 
@@ -87,14 +87,14 @@ def generate_json(prompt: str, *, system: str = "", temperature: float = 0.1, ma
             return (resp.text or "").strip()
         except Exception as e:
             last_err = e
-            if attempt < max_retries:
-                if _is_rate_limit(e):
-                    # respect google's own retry hint if present, else back off longer
-                    wait = _parse_retry_delay(e) or [8.0, 20.0, 40.0][min(attempt, 2)]
-                    wait += 1.0  # small buffer
-                else:
-                    wait = [2.0, 5.0, 10.0][min(attempt, 2)]
-                time.sleep(wait)
+            if attempt >= max_retries:
+                break
+            # rate limits: fail fast so the route can return a friendly retry msg
+            # (waiting google's suggested 30-60s delay blows past render's proxy timeout)
+            if _is_rate_limit(e):
+                break
+            # transient network errors: short backoff and retry
+            time.sleep([2.0, 5.0][min(attempt, 1)])
     raise last_err
 
 
