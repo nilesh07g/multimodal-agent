@@ -15,6 +15,7 @@ uploads/
 
 # local reference only
 docs/plan.md
+docs/demo-script.md
 
 .idea/
 .vscode/
