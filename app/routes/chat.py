@@ -1,3 +1,4 @@
+import logging
 from typing import Optional
 
 from fastapi import APIRouter, File, Form, UploadFile
@@ -5,6 +6,8 @@ from fastapi import APIRouter, File, Form, UploadFile
 from app.agent import orchestrator
 from app.config import settings
 from app.extractors import audio_stt, image_ocr, pdf_parser, text as text_ext, url_detector
+
+log = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api", tags=["chat"])
 
@@ -103,5 +106,29 @@ async def chat(
             "plan_trace": [],
         }
 
-    agent_out = orchestrator.run(q, extracted)
+    try:
+        agent_out = orchestrator.run(q, extracted)
+    except Exception as e:
+        # last-mile guard: never let the api return a 500. the ui always gets
+        # a usable envelope, and the plan_trace surfaces the error.
+        log.exception("orchestrator crashed")
+        msg = str(e) or type(e).__name__
+        friendly = msg
+        if "429" in msg or "RESOURCE_EXHAUSTED" in msg or "quota" in msg.lower():
+            friendly = "the language model is rate-limited right now. please try again in a minute."
+        agent_out = {
+            "answer": friendly,
+            "follow_up": None,
+            "plan": None,
+            "plan_trace": [{
+                "step_number": 0,
+                "tool": "orchestrator",
+                "args": {},
+                "reason": "",
+                "output_preview": "",
+                "duration_ms": 0,
+                "status": "error",
+                "error": msg[:400],
+            }],
+        }
     return {"query": q, "extracted": extracted, **agent_out}
