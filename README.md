@@ -92,7 +92,7 @@ tesseract-ocr poppler-utils` does the same.
 
 ## Architecture
 
-![architecture](docs/architecture.png)
+📊 [Open the architecture diagram](docs/architecture.png)
 
 Three layers, top to bottom.
 
