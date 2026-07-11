@@ -92,6 +92,8 @@ tesseract-ocr poppler-utils` does the same.
 
 ## Architecture
 
+![architecture](docs/architecture.png)
+
 Three layers, top to bottom.
 
 ```
@@ -130,7 +132,7 @@ FastAPI  ─── route has a last-mile exception guard so the UI never sees a 
 UI renders three panels: extracted / answer / plan trace
 ```
 
-There's a bigger version of this in [`docs/architecture.png`](docs/architecture.png).
+Deep-dive with request lifecycle and failure paths: [`docs/architecture.md`](docs/architecture.md).
 
 ### Folder layout
 
