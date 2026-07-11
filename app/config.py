@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     gemini_api_key: str = ""
     groq_api_key: str = ""
 
-    gemini_model: str = "gemini-2.5-flash-lite"
+    gemini_model: str = "gemini-2.5-flash"
     whisper_model: str = "whisper-large-v3-turbo"
 
     # upload caps (bytes)
