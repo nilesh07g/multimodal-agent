@@ -345,17 +345,22 @@ I'd rather flag these than hope nobody notices.
 
 ---
 
-## What I'd add with another day
+## Future improvements
 
 - **`answer_over_context` tool** — a dedicated Q&A tool for "extract just
   the action items from this PDF" style queries, instead of leaning on
   `summarize` or `conversational`.
 - **PDF link-annotation extraction** — pull URL destinations from
   PyMuPDF's `page.get_links()` so hidden hyperlinks get picked up too.
-- **Cost / token estimator** (bonus item) — every LLM call already goes
-  through `services/gemini.py`, so this would be one wrapper.
-- **Streaming responses** (bonus item) — swap the single `fetch` in
-  `app.js` for Server-Sent Events and render tokens as they arrive.
+- **Cost / token estimator** — every LLM call already goes through
+  `services/gemini.py`, so this would be one wrapper.
+- **Streaming responses** — swap the single `fetch` in `app.js` for
+  Server-Sent Events and render tokens as they arrive.
+- **Persistent chat history** — right now sessions live in the browser
+  only. A small SQLite layer keyed by session id would survive refreshes.
+- **Broader multimodal coverage** — handle DOCX, PPTX, XLSX via a parser
+  layer next to `pdf_parser.py`. Images with heavy diagrams could use a
+  vision-language fallback once the standard OCR path fails.
 
 ---
 
